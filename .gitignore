@@ -1,0 +1,14 @@
+# Java
+target/
+*.class
+
+# Python
+.env
+credentials.json
+tokens/
+__pycache__/
+.venv/
+
+# IDE
+.idea/
+.vscode/
