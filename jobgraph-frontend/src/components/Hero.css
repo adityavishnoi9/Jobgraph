@@ -1,0 +1,30 @@
+.hero {
+  max-width: 680px;
+  text-align: center;
+}
+
+.hero__eyebrow {
+  color: black;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hero__title {
+  margin: 12px 0 16px;
+  font-size: clamp(2.75rem, 8vw, 5rem);
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.hero__title span {
+  color: black;
+}
+
+.hero__subtitle {
+  margin: 0;
+  color: black;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}

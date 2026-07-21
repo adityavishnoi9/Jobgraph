@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/profile")
+@CrossOrigin(origins = "http://localhost:5173")
 public class ProfileController {
 
     private final ResumeParsingService resumeParsingService;
