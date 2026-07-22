@@ -13,6 +13,11 @@ public class ParsedProfileDto {
     private List<ExperienceDto> experience;
     private List<ProjectDto> projects;
 
+    // Catch-all for resume sections with no dedicated DTO/table yet
+    // (e.g. "achievements", "certifications", "publications").
+    // Key = normalized section name, Value = list of line items.
+    private Map<String, List<String>> additionalSections;
+
     public String getFname() { return fname; }
     public void setFname(String fname) { this.fname = fname; }
 
@@ -36,4 +41,7 @@ public class ParsedProfileDto {
 
     public List<ProjectDto> getProjects() { return projects; }
     public void setProjects(List<ProjectDto> projects) { this.projects = projects; }
+
+    public Map<String, List<String>> getAdditionalSections() { return additionalSections; }
+    public void setAdditionalSections(Map<String, List<String>> additionalSections) { this.additionalSections = additionalSections; }
 }

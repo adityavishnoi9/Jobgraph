@@ -18,3 +18,13 @@ export async function uploadResume(resumeFile, additionalInfo) {
     if (!res.ok) throw new Error('Resume upload failed')
     return res.json()
 }
+
+export async function saveProfile(profile) {
+    const res = await fetch(`${API_BASE}/profile/save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profile),
+    })
+    if (!res.ok) throw new Error('Save failed')
+    return res.json()
+}
