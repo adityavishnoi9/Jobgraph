@@ -14,12 +14,18 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "account_id", nullable = false, unique = true)
+    // One saved resume profile belongs to exactly one login account.
+    private Account account;
+
     @Column(nullable = false)
     private String fname;
 
     private String lname;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
+    // Contact email from the resume; it can differ from the account's login email.
     private String email;
 
     private String linkedinUrl;
@@ -34,6 +40,11 @@ public class User {
     @Column(columnDefinition = "jsonb")
     private Map<String, java.util.List<String>> skills;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
+    // Keeps sections such as awards or certifications that have no separate table.
+    private Map<String, java.util.List<String>> additionalSections;
+
     @Column(columnDefinition = "text")
     private String resumeRawText;
 
@@ -44,6 +55,9 @@ public class User {
 
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
+
+    public Account getAccount() { return account; }
+    public void setAccount(Account account) { this.account = account; }
 
     public String getFname() { return fname; }
     public void setFname(String fname) { this.fname = fname; }
@@ -62,6 +76,9 @@ public class User {
 
     public Map<String, java.util.List<String>> getSkills() { return skills; }
     public void setSkills(Map<String, java.util.List<String>> skills) { this.skills = skills; }
+
+    public Map<String, java.util.List<String>> getAdditionalSections() { return additionalSections; }
+    public void setAdditionalSections(Map<String, java.util.List<String>> additionalSections) { this.additionalSections = additionalSections; }
 
     public String getResumeRawText() { return resumeRawText; }
     public void setResumeRawText(String resumeRawText) { this.resumeRawText = resumeRawText; }

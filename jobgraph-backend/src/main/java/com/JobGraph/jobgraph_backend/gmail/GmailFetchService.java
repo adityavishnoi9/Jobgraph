@@ -28,8 +28,9 @@ public class GmailFetchService {
      * Returns them oldest-to-newest; the caller decides how to order them
      * further (e.g. into a stack).
      */
-    public List<EmailDto> fetchEmails(String query, int maxResults) throws Exception {
-        Gmail service = gmailAuthService.getGmailService();
+    public List<EmailDto> fetchEmails(Integer accountId, String query, int maxResults) throws Exception {
+        // The account ID selects that user's saved Gmail connection and token.
+        Gmail service = gmailAuthService.getGmailService(accountId);
         List<EmailDto> results = new ArrayList<>();
 
         var response = service.users().messages().list("me")

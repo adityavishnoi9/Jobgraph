@@ -1,12 +1,11 @@
 package com.JobGraph.jobgraph_backend.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
-import java.util.List;
 import java.util.Map;
 
 @Service
@@ -14,64 +13,72 @@ public class ProfileParsingOrchestratorService {
 
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
-    private final String geminiApiKey;
-    private final String geminiModel;
+    private final String openAiApiKey;
+    private final String openAiModel;
 
     public ProfileParsingOrchestratorService(
-            @Value("${gemini.api.key}") String geminiApiKey,
-            @Value("${gemini.model:gemini-3.5-flash}") String geminiModel
+            @Value("${OPENAI_API_KEY}") String openAiApiKey,
+            @Value("${OPENAI_MODEL:gpt-6-luna}") String openAiModel
     ) {
-        this.geminiApiKey = geminiApiKey;
-        this.geminiModel = geminiModel;
+        this.openAiApiKey = openAiApiKey;
+        this.openAiModel = openAiModel;
         this.objectMapper = new ObjectMapper();
         this.restClient = RestClient.builder()
-                .baseUrl("https://generativelanguage.googleapis.com/v1beta")
+                .baseUrl("https://api.openai.com/v1")
                 .build();
     }
 
     /**
      * Sends the raw extracted resume text (+ any extra user-provided context)
-     * straight to Gemini, and gets back JSON shaped exactly like ParsedProfileDto.
+     * straight to OpenAI, and gets back JSON shaped exactly like ParsedProfileDto.
      * No Python service involved - this is the only hop.
      */
     public JsonNode parseAndNormalize(String resumeText, String additionalInfo) {
         String prompt = buildPrompt(resumeText, additionalInfo == null ? "" : additionalInfo);
 
         Map<String, Object> requestBody = Map.of(
-                "contents", List.of(
-                        Map.of("parts", List.of(Map.of("text", prompt)))
-                ),
-                "generationConfig", Map.of(
-                        "responseMimeType", "application/json",
-                        "temperature", 0.1
-                )
+                "model", openAiModel,
+                "input", prompt,
+                "text", Map.of("format", Map.of("type", "json_object")),
+                "reasoning", Map.of("effort", "none"),
+                "store", false
         );
 
         JsonNode response = restClient.post()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/models/{model}:generateContent")
-                        .queryParam("key", geminiApiKey)
-                        .build(geminiModel))
+                .uri("/responses")
+                .header("Authorization", "Bearer " + openAiApiKey)
                 .body(requestBody)
                 .retrieve()
                 .body(JsonNode.class);
 
-        String rawJsonText = response
-                .path("candidates").path(0)
-                .path("content").path("parts").path(0)
-                .path("text").asText();
+        if (response == null || !"completed".equals(response.path("status").asText())) {
+            throw new IllegalStateException("OpenAI did not complete the response.");
+        }
+
+        String rawJsonText = null;
+        for (JsonNode item : response.path("output")) {
+            for (JsonNode content : item.path("content")) {
+                if ("output_text".equals(content.path("type").asText())) {
+                    rawJsonText = content.path("text").asText();
+                    break;
+                }
+            }
+            if (rawJsonText != null) break;
+        }
+        if (rawJsonText == null || rawJsonText.isBlank()) {
+            throw new IllegalStateException("OpenAI response did not contain profile JSON.");
+        }
 
         try {
             return objectMapper.readTree(rawJsonText);
         } catch (Exception e) {
-            throw new RuntimeException("Gemini returned invalid JSON: " + rawJsonText, e);
+            throw new RuntimeException("OpenAI returned invalid profile JSON.", e);
         }
     }
 
     /**
-     * The schema is enforced through instruction + example rather than Gemini's
-     * strict responseSchema mode, because ParsedProfileDto has dynamic-key maps
-     * (codingHandles, skills, additionalSections) that responseSchema can't express.
+     * JSON mode keeps the output parseable while the prompt describes the
+     * dynamic-key maps used by ParsedProfileDto.
      */
     private String buildPrompt(String resumeText, String additionalInfo) {
         return """

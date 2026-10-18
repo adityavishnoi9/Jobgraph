@@ -55,7 +55,7 @@ public class ResumeParsingService {
             try (var textStream = file.getInputStream()) {
                 plainText = tika.parseToString(textStream);
             }
-            System.out.println(plainText);
+            // Resume text can contain private details, so keep it out of terminal logs.
             // Step 2: find each hyperlink's label by reading the text
             // inside its bounding box, page by page.
 //            Map<String, String> labelToUrl = new LinkedHashMap<>();

@@ -5,10 +5,8 @@ job-opening emails, filters out spam/irrelevant alerts using an AI pipeline,
 and builds a structured candidate profile from your resume — all with a
 human-in-the-loop review step before anything gets acted on.
 
-Built to demonstrate: Spring Boot backend engineering, a Python/LangGraph
-agentic AI service, and Gmail API integration, working together as
-independent microservices. A React frontend is in progress but not yet
-pushed to this repo.
+Built to demonstrate Spring Boot backend engineering, a Python/LangGraph
+AI service, OpenAI integration, Gmail API integration, and a React frontend.
 
 ## Why this exists
 
@@ -21,20 +19,16 @@ submission). See [`/areas/jobgraph.md`](#) for the full design rationale.
 ## Architecture
 
 ```
-┌──────────────────────┐     ┌────────────────────────┐
-│  Spring Boot Backend │────▶│  Python AI Service     │
-│  (jobgraph-backend)  │     │  (jobgraph-ai-service) │
-│  Port 8080           │◀────│  Port 8000             │
-└──────────┬───────────┘     └────────────────────────┘
-            │
- ┌──────────▼───────────┐
- │  PostgreSQL + pgvector│
- └───────────────────────┘
+React frontend ──▶ Spring Boot backend ──▶ OpenAI Responses API
+                         │
+                         └──▶ PostgreSQL + pgvector
+
+Python AI service ──▶ OpenAI Responses API
 ```
 
-- **Spring Boot** — core APIs, database, Gmail integration (OAuth + fetch +
-  scheduled polling), resume text extraction.
-- **Python (FastAPI + LangGraph)** — resume structuring via Gemini, and a
+- **Spring Boot** — core APIs, database, Gmail integration (OAuth + fetch),
+  resume text extraction.
+- **Python (FastAPI + LangGraph)** — resume structuring via OpenAI, and a
   LangGraph pipeline that classifies job-alert emails as spam or genuine,
   verifies real postings via web search, and ranks them by relevance.
 - **PostgreSQL** — relational data (users, experience, projects, bullets,
@@ -43,28 +37,35 @@ submission). See [`/areas/jobgraph.md`](#) for the full design rationale.
 ## Features implemented so far
 
 ### Profile creation
+- Sign up or log in with an email and password before accessing the workspace.
 - Upload a resume (PDF) → text + hyperlinks extracted (Apache Tika + PDFBox,
   with position-based link-to-label matching so `GitHub Profile` stays
   attached to its actual URL instead of being separated).
-- Extracted text sent to Gemini, which returns a structured JSON profile
+- Extracted text sent directly from Spring Boot to OpenAI, which returns a structured JSON profile
   (skills, experience, projects, bullets with tags) grounded strictly in the
   source resume — no invented facts.
-- Confirmed profile saved across four related tables: `users`, `experience`,
-  `projects`, `bullets`.
+- Review and edit all parsed fields before saving. Saving opens a separate
+  profile page with the saved details and Gmail connection controls. Each
+  account owns one profile across `users`, `experience`, `projects`, and
+  `bullets`; saved profiles can be edited again after login.
 
 ### Gmail integration
-- OAuth2 (read-only scope) via Google Cloud, token cached locally after
-  first approval.
-- Manual fetch endpoint and an automatic scheduled poll (every 10 minutes)
-  that searches Gmail for job-related keywords/senders in the last 10 days.
+- After saving a profile, enter the Gmail address to connect, then complete
+  Google's sign-in, verification, and consent screens. The connected address
+  must match the address entered in JobGraph.
+  The Gmail address may differ from the JobGraph login email. Each account has
+  one replaceable connection; its refresh token is encrypted in PostgreSQL.
+- Manual fetch endpoint that searches Gmail for job-related keywords/senders
+  in the last 10 days. The dedicated Inbox page shows the fetched messages with
+  sender, subject, date, preview, and expandable message text.
 - Fetched emails held in an in-memory stack (`ArrayDeque`), most recent on
-  top.
+  top; repeated fetches refresh messages with the same Gmail ID.
 
 ### AI-based email filtering (LangGraph)
-- **Classify relevance** — Gemini reads each email and judges whether it's a
+- **Classify relevance** — OpenAI reads each email and judges whether it's a
   genuine job opening or spam/promo content, not just keyword matching.
 - **Search verify** — extracts the actual "view this job" link from the
-  email body, fetches that page, and asks Gemini whether it describes a
+  email body, fetches that page, and asks OpenAI whether it describes a
   real, currently open posting. Falls back to a general company search if
   no usable link is found.
 - **Score & rank** — combines both signals into one relevance score;
@@ -76,11 +77,11 @@ submission). See [`/areas/jobgraph.md`](#) for the full design rationale.
 |---|---|
 | Backend | Spring Boot 4, Java 21+, Maven |
 | Database | PostgreSQL 18 + pgvector |
-| AI service | Python 3.10+, FastAPI, LangGraph, Gemini API |
+| AI service | Python 3.10–3.13, FastAPI, LangGraph, OpenAI Responses API |
 | Email | Gmail API (OAuth2) |
 | Resume parsing | Apache Tika, PDFBox |
 | Search (verification) | DuckDuckGo Search |
-| Frontend *(in progress, not yet in repo)* | React (Vite), Tailwind CSS |
+| Frontend | React (Vite), CSS |
 
 ## Directory structure
 
@@ -94,56 +95,76 @@ JobGraph/
 │       ├── service/               ResumeParsingService, ProfileService
 │       ├── controller/            ProfileController
 │       └── gmail/                GmailAuthService, GmailFetchService, EmailStack,
-│                                  EmailController, GmailPollingJob
+│                                  EmailController, GmailConnectionController
 ├── jobgraph-ai-service/          Python/FastAPI AI service
 │   ├── main.py                    /parse-resume, /filter-emails endpoints
 │   ├── graph.py                   LangGraph pipeline for email relevance filtering
 │   └── requirements.txt
 └── README.md
 
-(A jobgraph-frontend/ React app exists locally and is in progress,
- but hasn't been pushed to this repo yet.)
+The React app lives in `jobgraph-frontend/`.
 ```
 
 ## Setup
 
 ### Prerequisites
 - JDK 21+, Maven (or `mvnw`)
-- Python 3.10+
+- Python 3.10–3.13
 - Node.js + npm
 - PostgreSQL 18 with the `pgvector` extension
 - A Google Cloud project with the Gmail API enabled + OAuth credentials
-- A free Gemini API key ([aistudio.google.com](https://aistudio.google.com))
+- An OpenAI API key with API billing enabled ([API keys](https://platform.openai.com/api-keys))
 
 ### 1. Database
 ```sql
 CREATE DATABASE jobgraph;
 CREATE EXTENSION IF NOT EXISTS vector;
 ```
-Run `jobgraph-backend/src/main/resources/schema.sql` (or let Hibernate
-auto-create tables via `ddl-auto=update` in `application.properties`).
+Flyway creates and migrates the tables when the backend starts. On the existing
+local database, the migration removes the one pre-account test profile and its
+related records. It stops if it finds more than one legacy profile.
 
 ### 2. Spring Boot backend
 ```bash
+# Copy jobgraph-ai-service/envexample to jobgraph-ai-service/.env and add
+# OPENAI_API_KEY=your_key_here (OPENAI_MODEL is optional).
 cd jobgraph-backend
 # edit src/main/resources/application.properties with your DB credentials
-# place your Gmail OAuth credentials.json at src/main/resources/credentials.json
 mvn spring-boot:run
 ```
 Runs on `http://localhost:8080`.
+The backend loads the ignored `jobgraph-ai-service/.env` when launched from
+`jobgraph-backend/` or the repository root. An exported `OPENAI_API_KEY` also works.
+
+For Gmail, create a **Web application** OAuth client in Google Cloud, enable the
+Gmail API, and add `http://localhost:8080/api/gmail/callback` as an authorized
+redirect URI. Put these values in the ignored `jobgraph-ai-service/.env` file
+alongside `OPENAI_API_KEY`:
+
+```properties
+GOOGLE_CLIENT_ID=your_web_client_id
+GOOGLE_CLIENT_SECRET=your_web_client_secret
+GMAIL_TOKEN_ENCRYPTION_KEY=base64_encoded_32_byte_key
+```
+
+Generate the encryption key with `openssl rand -base64 32`. Keep it stable:
+changing it makes existing Gmail connections unreadable. Add your Google
+account as an OAuth test user if the consent screen is in testing mode. The
+backend still starts without these values, but Gmail connection reports a
+configuration error until they are set.
 
 ### 3. Python AI service
 ```bash
 cd jobgraph-ai-service
-python -m venv venv
-venv\Scripts\activate        # Windows
+python3.13 -m venv .venv  # Python 3.10–3.13
+source .venv/bin/activate  # macOS/Linux; on Windows use .venv\Scripts\activate
 pip install -r requirements.txt
-# create a .env file with: GEMINI_API_KEY=your_key_here
+# use the same jobgraph-ai-service/.env file with OPENAI_API_KEY=your_key_here
 uvicorn main:app --reload --port 8000
 ```
 Runs on `http://localhost:8000`.
 
-### 4. Frontend *(in progress — not yet pushed to this repo)*
+### 4. Frontend
 ```bash
 cd jobgraph-frontend
 npm install
@@ -155,11 +176,16 @@ Runs on `http://localhost:5173`.
 
 | Method | Endpoint | Service | Description |
 |---|---|---|---|
-| POST | `/profile/upload` | Spring Boot | Upload resume + extract text |
-| POST | `/profile/save` | Spring Boot | Save confirmed profile to DB |
-| POST | `/emails/fetch` | Spring Boot | Manually trigger Gmail fetch |
-| GET | `/emails/stack` | Spring Boot | View fetched emails, newest first |
-| GET | `/emails/stack/latest` | Spring Boot | Peek at the most recent email |
+| GET | `/api/auth/csrf` | Spring Boot | Get the CSRF token for writes |
+| POST | `/api/auth/signup`, `/api/auth/login`, `/api/auth/logout` | Spring Boot | Session account access |
+| GET | `/api/auth/me` | Spring Boot | Current account |
+| POST | `/api/profile/upload` | Spring Boot | Parse a resume into an unsaved draft |
+| GET, PUT | `/api/profile` | Spring Boot | Read or save the signed-in account's profile |
+| GET | `/api/gmail/status`, `/api/gmail/callback` | Spring Boot | Gmail connection status and OAuth callback |
+| POST | `/api/gmail/connect` | Spring Boot | Start Gmail connection for the entered address |
+| DELETE | `/api/gmail/connection` | Spring Boot | Disconnect Gmail |
+| POST | `/api/emails/fetch` | Spring Boot | Fetch from the signed-in account's Gmail |
+| GET | `/api/emails/stack`, `/api/emails/stack/latest` | Spring Boot | View that account's fetched emails |
 | POST | `/parse-resume` | Python | Structure raw resume text into JSON |
 | POST | `/filter-emails` | Python | Classify, verify, and rank emails |
 
@@ -168,9 +194,8 @@ Runs on `http://localhost:5173`.
 - **Email stack is in-memory** — resets on app restart. Persisting fetched
   emails into the `job_status` table (already in the schema) is the next
   step.
-- **Gmail OAuth uses a local desktop flow** (browser popup), not a
-  production web OAuth redirect — fine for a personal-use tool, would need
-  rework for multi-user deployment.
+- **Gmail OAuth needs Google web credentials** — automated tests mock Google;
+  live consent requires the OAuth client settings above.
 - **Form auto-fill on company portals is intentionally not fully
   autonomous** — the system prepares and pre-fills what it can; final
   submission stays a manual, human step by design.

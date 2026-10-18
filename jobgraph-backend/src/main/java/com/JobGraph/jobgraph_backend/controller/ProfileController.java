@@ -1,72 +1,61 @@
 package com.JobGraph.jobgraph_backend.controller;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.JobGraph.jobgraph_backend.DTO.ParsedProfileDto;
-import com.JobGraph.jobgraph_backend.model.User;
+import com.JobGraph.jobgraph_backend.service.AccountService;
 import com.JobGraph.jobgraph_backend.service.ProfileParsingOrchestratorService;
 import com.JobGraph.jobgraph_backend.service.ProfileService;
 import com.JobGraph.jobgraph_backend.service.ResumeParsingService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
-@RequestMapping("/profile")
+@RequestMapping("/api/profile")
 public class ProfileController {
-
+    private static final Logger log = LoggerFactory.getLogger(ProfileController.class);
     private final ResumeParsingService resumeParsingService;
     private final ProfileParsingOrchestratorService orchestratorService;
     private final ProfileService profileService;
+    private final AccountService accounts;
 
     public ProfileController(ResumeParsingService resumeParsingService,
                              ProfileParsingOrchestratorService orchestratorService,
-                             ProfileService profileService) {
+                             ProfileService profileService, AccountService accounts) {
         this.resumeParsingService = resumeParsingService;
         this.orchestratorService = orchestratorService;
         this.profileService = profileService;
+        this.accounts = accounts;
     }
 
-    /**
-     * Full pipeline in one call:
-     *  1. Extract resume text (Tika)
-     *  2. Parse into structured JSON via Gemini
-     *  3. Normalize keys/structure to exactly match ParsedProfileDto
-     * Returns the normalized JSON for the frontend to show/edit -
-     * nothing is saved to the DB yet.
-     */
     @PostMapping(value = "/upload", consumes = "multipart/form-data")
-    public ResponseEntity<?> uploadResume(
-            @RequestParam("resume") MultipartFile resume,
-            @RequestParam(value = "additionalInfo", required = false) String additionalInfo
-    ) {
-//        System.out.println("is this working");
-        if (resume.isEmpty()) {
-            return ResponseEntity.badRequest().body("Resume file is required.");
-        }
-
+    // Parsing returns an editable draft; it does not save a profile yet.
+    public ResponseEntity<?> uploadResume(@RequestParam("resume") MultipartFile resume,
+                                          @RequestParam(value = "additionalInfo", required = false) String additionalInfo) {
+        if (resume.isEmpty()) return ResponseEntity.badRequest().body("Resume file is required.");
         try {
             String extractedText = resumeParsingService.extractText(resume);
             JsonNode normalizedProfile = orchestratorService.parseAndNormalize(extractedText, additionalInfo);
-//            System.out.println("hi baby");
-//            return ResponseEntity.ok("hi");
             return ResponseEntity.ok(normalizedProfile);
         } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body("Failed to process resume: " + e.getMessage());
+            log.error("Failed to process uploaded resume", e);
+            return ResponseEntity.internalServerError().body("Failed to process resume. See backend logs.");
         }
     }
 
-    /**
-     * Saves the user-confirmed/edited profile into the DB.
-     */
-    @PostMapping("/save")
-    public ResponseEntity<?> saveProfile(@RequestBody ParsedProfileDto dto) {
-        try {
-            User savedUser = profileService.saveProfile(dto);
-            return ResponseEntity.ok(savedUser);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body("Failed to save profile: " + e.getMessage());
-        }
+    @GetMapping
+    // Always find the profile through the signed-in account, not a client-supplied ID.
+    public ResponseEntity<ParsedProfileDto> get(Authentication authentication) {
+        return profileService.get(accounts.current(authentication).getId())
+                .map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PutMapping
+    // Save edits to this account's one profile.
+    public ParsedProfileDto save(@RequestBody ParsedProfileDto dto, Authentication authentication) {
+        return profileService.save(accounts.current(authentication), dto);
     }
 }

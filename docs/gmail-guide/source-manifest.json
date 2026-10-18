@@ -1,0 +1,119 @@
+{
+  "snapshot_date": "2026-10-03",
+  "files": [
+    {
+      "path": "jobgraph-backend/src/main/java/com/JobGraph/jobgraph_backend/gmail/GmailAuthService.java",
+      "sha256": "7e3d32293a345873d6be5584ea688710bf67665456efd6b11f0b8489337fd9f2"
+    },
+    {
+      "path": "jobgraph-backend/src/main/java/com/JobGraph/jobgraph_backend/gmail/GmailConnectionController.java",
+      "sha256": "b5a981bcc854af5cbea2b096eb70e9210dc3e3b8ca68899dd28dcc7f1024f424"
+    },
+    {
+      "path": "jobgraph-backend/src/main/java/com/JobGraph/jobgraph_backend/gmail/TokenCipher.java",
+      "sha256": "dcadb14ad2b1f2281907ab0825347a06670177e02c6403672441a225235d71ca"
+    },
+    {
+      "path": "jobgraph-backend/src/main/java/com/JobGraph/jobgraph_backend/gmail/GmailFetchService.java",
+      "sha256": "92eb43d6c5f767ef4849f0d00d57a4fb356169336ea711e55c41859946509594"
+    },
+    {
+      "path": "jobgraph-backend/src/main/java/com/JobGraph/jobgraph_backend/gmail/EmailController.java",
+      "sha256": "e136ba80bfdfe3566b9a4f5d8397385ae88405cfcd857b208095b3fef1477c21"
+    },
+    {
+      "path": "jobgraph-backend/src/main/java/com/JobGraph/jobgraph_backend/gmail/EmailStack.java",
+      "sha256": "f8fb045eee27a275edf244097a36350b512fdcc92ccf273e2aafce9e7c88420e"
+    },
+    {
+      "path": "jobgraph-backend/src/main/java/com/JobGraph/jobgraph_backend/gmail/EmailDto.java",
+      "sha256": "6c6f236d2209c3a9bd9b2568eb0fd743952deea8f0d0b2ed061cc65ca9428dff"
+    },
+    {
+      "path": "jobgraph-backend/src/main/java/com/JobGraph/jobgraph_backend/model/GmailConnection.java",
+      "sha256": "f8ec8cb2bc48ec6cd8ff2d1cc6a2bdc8d9745901e87b1e45325e772f14162371"
+    },
+    {
+      "path": "jobgraph-backend/src/main/java/com/JobGraph/jobgraph_backend/repository/GmailConnectionRepository.java",
+      "sha256": "973a8cce57eb8e8860b542227150dad9cd14e21c45ea66959ea94228ae6982ad"
+    },
+    {
+      "path": "jobgraph-backend/src/main/java/com/JobGraph/jobgraph_backend/config/SecurityConfig.java",
+      "sha256": "41460ead5c57b850a623338786add433e93db482676eb269664cc1c4b7e04ee3"
+    },
+    {
+      "path": "jobgraph-backend/src/main/java/com/JobGraph/jobgraph_backend/config/CorsConfig.java",
+      "sha256": "9e7ac9ff5cb016537d34e022f8f0c4b75b8a0835910003834fd97a66a24477c9"
+    },
+    {
+      "path": "jobgraph-backend/src/main/java/com/JobGraph/jobgraph_backend/service/AccountService.java",
+      "sha256": "c2bf201d37a4b262484386d83e9110fe140c25caf09f10ba015c3d36fc6604cb"
+    },
+    {
+      "path": "jobgraph-backend/src/main/java/com/JobGraph/jobgraph_backend/controller/AuthController.java",
+      "sha256": "ca7439ee0d7e38717d1f5d75a0ba05d24ab2e8bc61641904fa484c1465f56475"
+    },
+    {
+      "path": "jobgraph-frontend/src/api/api.js",
+      "sha256": "a30a55088d68c49a3ec00bdeee5a7d0faf96ede0cbf2aff63d3b7c7712be4f42"
+    },
+    {
+      "path": "jobgraph-frontend/src/components/ConnectGmailButton.jsx",
+      "sha256": "5d064c52eff18dca6195a5d538e3fe915f5f7904bd617a1c523758d2ebdfac59"
+    },
+    {
+      "path": "jobgraph-frontend/src/components/GmailConnectDialog.jsx",
+      "sha256": "5f15b3ccb538bbe1ab9abc954f7a128c538453e071cba8bad36c03add2f8936e"
+    },
+    {
+      "path": "jobgraph-frontend/src/components/InboxPage.jsx",
+      "sha256": "b25cf0eec46158710484c2f15421ce17e38193489d190bb27f8bf0fc4a209c38"
+    },
+    {
+      "path": "jobgraph-frontend/src/components/FetchedEmails.jsx",
+      "sha256": "04e364d674d833ea081054664f95160ca58f2c8d3250f6bc77f97f1dbe3bc078"
+    },
+    {
+      "path": "jobgraph-backend/src/main/resources/db/migration/V2__accounts_and_gmail.sql",
+      "sha256": "47c0b9ec9e82a9a9c6fe910211475be6dad9c213518d0b49e99526a512854174"
+    },
+    {
+      "path": "jobgraph-backend/src/test/java/com/JobGraph/jobgraph_backend/GmailConnectionTests.java",
+      "sha256": "e3a2b3811d99342be89c4bc5f2b36c4c097765e856422f46113559f14dffd815"
+    }
+  ],
+  "references": {
+    "G1": [
+      "Google: OAuth for web server applications",
+      "https://developers.google.com/identity/protocols/oauth2/web-server"
+    ],
+    "G2": [
+      "Google: Gmail permission scopes",
+      "https://developers.google.com/workspace/gmail/api/auth/scopes"
+    ],
+    "G3": [
+      "Google: messages.list",
+      "https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/list"
+    ],
+    "G4": [
+      "Google: messages.get",
+      "https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/get"
+    ],
+    "G5": [
+      "Google: Message resource and MIME structure",
+      "https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages"
+    ],
+    "G6": [
+      "Google: OAuth and refresh-token expiration",
+      "https://developers.google.com/identity/protocols/oauth2"
+    ],
+    "S1": [
+      "Spring Security: CSRF protection",
+      "https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html"
+    ],
+    "J1": [
+      "Google Java OAuth client: Credential implementation",
+      "https://github.com/googleapis/google-oauth-java-client/blob/v1.36.0/google-oauth-client/src/main/java/com/google/api/client/auth/oauth2/Credential.java"
+    ]
+  }
+}

@@ -1,14 +1,12 @@
-import json
 import re
 from typing import TypedDict, Optional
 
 from langgraph.graph import StateGraph, END
 from duckduckgo_search import DDGS
-import google.generativeai as genai
 import requests
 from bs4 import BeautifulSoup
+from openai_client import generate_json
 
-model = genai.GenerativeModel("gemini-3.5-flash")
 
 # Links that are never the actual job posting - skip these when scanning
 # an email body for the real "view this job" URL.
@@ -35,15 +33,9 @@ class EmailState(TypedDict):
     reason: str
 
 
-def _call_gemini_json(prompt: str) -> dict:
-    """Calls Gemini and parses the response as JSON, stripping code fences if present."""
-    response = model.generate_content(prompt)
-    text = response.text.strip()
-    if text.startswith("```"):
-        text = text.strip("`")
-        if text.startswith("json"):
-            text = text[4:].strip()
-    return json.loads(text)
+def _call_openai_json(prompt: str) -> dict:
+    """Generate one JSON object with OpenAI."""
+    return generate_json(prompt)
 
 
 def _extract_job_url(body: str) -> Optional[str]:
@@ -100,7 +92,7 @@ Return ONLY JSON, no markdown:
   "reason": string              // one short sentence explaining the decision
 }}
 """
-    result = _call_gemini_json(prompt)
+    result = _call_openai_json(prompt)
     state["is_spam"] = result.get("is_spam", True)
     state["confidence"] = float(result.get("confidence", 0.0))
     state["company_name"] = result.get("company_name")
@@ -139,11 +131,11 @@ Return ONLY JSON, no markdown:
 }}
 """
             try:
-                result = _call_gemini_json(prompt)
+                result = _call_openai_json(prompt)
                 state["legitimacy_score"] = float(result.get("legitimacy_score", 0.3))
                 return state
             except Exception:
-                pass  # fall through to Path B if Gemini call fails
+                pass  # fall through to Path B if the model call fails
 
     # Path B (fallback): no usable job link found, or fetching it failed
     # (dead link, blocked by bot protection, etc.) - fall back to a
@@ -173,7 +165,7 @@ Return ONLY JSON, no markdown:
 }}
 """
     try:
-        result = _call_gemini_json(prompt)
+        result = _call_openai_json(prompt)
         state["legitimacy_score"] = float(result.get("legitimacy_score", 0.3))
     except Exception:
         state["legitimacy_score"] = 0.3

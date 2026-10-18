@@ -1,1 +1,5 @@
-GEMINI_API_KEY = "YOUR_API_KEY_HERE"
+OPENAI_API_KEY=your_key_here
+OPENAI_MODEL=gpt-6-luna
+GOOGLE_CLIENT_ID=your_web_oauth_client_id
+GOOGLE_CLIENT_SECRET=your_web_oauth_client_secret
+GMAIL_TOKEN_ENCRYPTION_KEY=base64_encoded_32_byte_key

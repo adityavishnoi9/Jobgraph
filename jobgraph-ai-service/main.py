@@ -1,19 +1,11 @@
-import os
 import json
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-import google.generativeai as genai
-from dotenv import load_dotenv
+from openai_client import OPENAI_API_KEY, generate_json
 from graph import filter_and_rank_emails
 
-load_dotenv()
-
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-if not GEMINI_API_KEY:
-    raise RuntimeError("GEMINI_API_KEY not set. Copy .env.example to .env and add your key.")
-
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-3.5-flash")
+if not OPENAI_API_KEY:
+    raise RuntimeError("OPENAI_API_KEY not set. Add it to jobgraph-ai-service/.env.")
 
 app = FastAPI(title="JobGraph AI Service")
 
@@ -76,17 +68,7 @@ ADDITIONAL INFO FROM USER:
 """
 
     try:
-        response = model.generate_content(prompt)
-        raw_output = response.text.strip()
-
-        # Gemini sometimes wraps JSON in ```json fences despite instructions - strip if present.
-        if raw_output.startswith("```"):
-            raw_output = raw_output.strip("`")
-            if raw_output.startswith("json"):
-                raw_output = raw_output[4:].strip()
-
-        parsed_json = json.loads(raw_output)
-        return parsed_json
+        return generate_json(prompt)
 
     except json.JSONDecodeError:
         raise HTTPException(status_code=500, detail="LLM did not return valid JSON. Try again.")

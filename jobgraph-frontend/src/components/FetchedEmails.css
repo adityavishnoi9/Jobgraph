@@ -1,0 +1,27 @@
+.fetched-emails { margin-bottom: 50px; padding: clamp(24px, 3vw, 37px); border: 1px solid #cbded2; border-radius: 17px; background: #edf5ee; scroll-margin-top: 25px; }
+.fetched-emails__top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.fetched-emails__top .eyebrow { color: #246f5f; }
+.fetched-emails__count { padding: 6px 10px; border-radius: 100px; background: #d8e9dd; color: #276b59; font-size: .66rem; font-weight: 850; letter-spacing: .08em; }
+.fetched-emails h2 { margin: 16px 0 8px; font: 500 clamp(2rem, 3.4vw, 3.1rem)/1.1 Georgia, serif; letter-spacing: -.05em; }
+.fetched-emails h2 em { color: #22816b; font-weight: 400; }
+.fetched-emails__intro { margin: 0 0 25px; color: #5d736a; font-size: .86rem; line-height: 1.6; }
+.fetched-emails__state { margin: 0; padding: 24px; border: 1px dashed #bdcec2; border-radius: 10px; background: #fbfdf8; color: #597068; font-size: .87rem; line-height: 1.55; }
+.fetched-emails__state--error { border-color: #edc0b2; color: #a13c2b; }
+.fetched-emails__list { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.fetched-email { min-width: 0; padding: 21px 23px; border: 1px solid #d8e3d9; border-radius: 12px; background: #fffefa; }
+.fetched-email__top { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.fetched-email__number { color: var(--orange); font-size: .71rem; font-weight: 850; }
+.fetched-email time { color: #7b8a82; font-size: .74rem; text-align: right; }
+.fetched-email h3 { margin: 12px 0 8px; font: 500 1.32rem/1.2 Georgia, serif; letter-spacing: -.025em; overflow-wrap: anywhere; }
+.fetched-email__sender { margin: 0; color: #698078; font-size: .78rem; overflow-wrap: anywhere; }
+.fetched-email__sender strong { color: #315a4f; font-weight: 750; }
+.fetched-email__snippet { margin: 15px 0 0; color: #57666a; font-size: .86rem; line-height: 1.55; overflow-wrap: anywhere; }
+.fetched-email details { margin-top: 16px; padding-top: 14px; border-top: 1px solid #e7ede5; }
+.fetched-email summary { width: fit-content; color: #186b5c; font-size: .8rem; font-weight: 750; cursor: pointer; }
+.fetched-email summary:hover { text-decoration: underline; }
+.fetched-email__body { max-height: 360px; overflow: auto; margin-top: 13px; color: #596b65; font-size: .81rem; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 560px) {
+  .fetched-emails { padding: 24px 18px; }
+  .fetched-email { padding: 18px; }
+  .fetched-email__top { align-items: start; }
+}

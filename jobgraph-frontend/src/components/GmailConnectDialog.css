@@ -1,0 +1,24 @@
+.gmail-dialog { width: min(100% - 32px, 520px); max-width: none; max-height: min(90dvh, 760px); margin: auto; padding: 30px 34px 32px; border: 1px solid #d8e4db; border-radius: 20px; background: #fbfaf5; color: var(--ink); box-shadow: 0 32px 90px #0b302f45; }
+.gmail-dialog::backdrop { background: #0c2829a8; backdrop-filter: blur(6px); }
+.gmail-dialog__top { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.gmail-dialog__top .eyebrow { color: #287564; }
+.gmail-dialog__close { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 1px solid #d8e3db; border-radius: 50%; background: #fff; color: #516960; font-size: 1.35rem; line-height: 1; }
+.gmail-dialog__close:hover:not(:disabled) { background: #e9f3ea; }
+.gmail-dialog__symbol { display: grid; place-items: center; width: 50px; height: 50px; margin: 25px 0 18px; border-radius: 14px; background: #dbeee2; color: #176257; font-size: 1.55rem; }
+.gmail-dialog h2 { max-width: 410px; margin: 0 0 12px; font: 500 clamp(2rem, 6vw, 2.7rem)/1.08 Georgia, serif; letter-spacing: -.05em; }
+.gmail-dialog > p { max-width: 420px; margin: 0; color: #5e6d69; font-size: .9rem; line-height: 1.6; }
+.gmail-dialog form { display: grid; gap: 10px; margin-top: 27px; }
+.gmail-dialog label { color: #283e3b; font-size: .8rem; font-weight: 750; }
+.gmail-dialog input { width: 100%; min-height: 52px; padding: 12px 14px; border: 1px solid #bfcfc6; border-radius: 9px; background: #fff; color: var(--ink); font-size: .95rem; }
+.gmail-dialog input:focus { border-color: #1d7663; outline: 3px solid #bde3d0; outline-offset: 1px; }
+.gmail-dialog__continue { width: 100%; margin-top: 5px; background: #176257; color: #fff; }
+.gmail-dialog__continue:hover:not(:disabled) { background: #114b43; }
+.gmail-dialog__error { margin: 1px 0 0; color: #a93425; font-size: .82rem; line-height: 1.45; }
+.gmail-dialog__steps { display: flex; flex-wrap: wrap; gap: 8px 17px; margin-top: 28px; padding-top: 20px; border-top: 1px solid #e0e5dc; color: #677772; font-size: .73rem; font-weight: 650; }
+.gmail-dialog__steps span { display: inline-flex; gap: 5px; align-items: center; }
+.gmail-dialog__steps b { color: #d36950; font-size: .7rem; }
+.gmail-dialog .gmail-dialog__note { max-width: none; margin-top: 14px; color: #77847e; font-size: .78rem; line-height: 1.5; }
+@media (max-width: 560px) {
+  .gmail-dialog { padding: 25px 22px 27px; }
+  .gmail-dialog__symbol { margin-top: 19px; }
+}
